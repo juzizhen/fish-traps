@@ -1,4 +1,4 @@
-# fish-traps
+# Fish Traps Remastered
 
 [Original Mod Download](https://www.curseforge.com/minecraft/mc-mods/fish-traps)
 
