@@ -10,7 +10,7 @@ mc mod for auto fishing.  Supports both Forge and Fabric.
 
 ### Disclaimer:
 
-- I am not the original creator of the mod! I just ported to >=1.20.1 Fabric (No forge).
+- I am not the original creator of the mod! I just ported to 1.20.1 - 1.20.4 Fabric (No forge).
 - The idea, resources (textures, logo…) and most of the code was created by **@kylertlove**.
 
 ### License:
