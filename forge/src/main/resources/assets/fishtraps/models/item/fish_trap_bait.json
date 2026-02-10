@@ -1,6 +1,0 @@
-{
-    "parent": "item/generated",
-    "textures": {
-        "layer0": "fishtraps:item/fish_trap_bait"
-    }
-}

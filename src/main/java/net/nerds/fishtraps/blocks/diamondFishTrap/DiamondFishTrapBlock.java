@@ -1,0 +1,52 @@
+package net.nerds.fishtraps.blocks.diamondFishTrap;
+
+import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.screen.NamedScreenHandlerFactory;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.nerds.fishtraps.blocks.FishTrapEntityManager;
+import net.nerds.fishtraps.blocks.baseTrap.BaseFishTrapBlock;
+
+public class DiamondFishTrapBlock extends BaseFishTrapBlock {
+
+    public DiamondFishTrapBlock() {
+        super(FabricBlockSettings.copyOf(Blocks.DIAMOND_BLOCK)
+                .hardness(5.0f)
+                .nonOpaque()
+                .requiresTool());
+    }
+
+    @Override
+    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+        return new DiamondFishTrapBlockEntity(pos, state);
+    }
+
+    @Override
+    protected net.minecraft.block.entity.BlockEntityType<?> getBlockEntityType() {
+        return FishTrapEntityManager.DIAMOND_FISH_TRAP_ENTITY;
+    }
+
+    @Override
+    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+        if (!world.isClient) {
+            NamedScreenHandlerFactory screenHandlerFactory = this.createScreenHandlerFactory(state, world, pos);
+            if (screenHandlerFactory != null) {
+                player.openHandledScreen(screenHandlerFactory);
+            }
+        }
+        return ActionResult.SUCCESS;
+    }
+
+    @Override
+    public NamedScreenHandlerFactory createScreenHandlerFactory(BlockState state, World world, BlockPos pos) {
+        BlockEntity blockEntity = world.getBlockEntity(pos);
+        return blockEntity instanceof NamedScreenHandlerFactory ? (NamedScreenHandlerFactory) blockEntity : null;
+    }
+}

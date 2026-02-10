@@ -1,5 +1,18 @@
 # fish-traps
+
+[Original Mod Download](https://www.curseforge.com/minecraft/mc-mods/fish-traps)
+
+
+### Description:
+
+Mod originally created by **@kylertlove** .
 mc mod for auto fishing.  Supports both Forge and Fabric.
 
+### Disclaimer:
 
-[Mod Download](https://www.curseforge.com/minecraft/mc-mods/fish-traps)
+- I am not the original creator of the mod! I just ported to 1.20.X Fabric (No forge).
+- The idea, resources (textures, logo…) and most of the code was created by **@kylertlove**.
+
+### License:
+
+The license you can find it on the original [repository](https://github.com/kylertlove/fish-traps).

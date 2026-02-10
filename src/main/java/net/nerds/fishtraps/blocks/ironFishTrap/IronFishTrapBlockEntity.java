@@ -1,0 +1,40 @@
+package net.nerds.fishtraps.blocks.ironFishTrap;
+
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import net.minecraft.block.BlockState;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+import net.minecraft.util.math.BlockPos;
+import net.nerds.fishtraps.Fishtraps;
+import net.nerds.fishtraps.blocks.FishTrapEntityManager;
+import net.nerds.fishtraps.blocks.baseTrap.BaseFishTrapBlockEntity;
+import net.nerds.fishtraps.config.FishTrapValues;
+
+public class IronFishTrapBlockEntity extends BaseFishTrapBlockEntity implements ExtendedScreenHandlerFactory {
+
+    public IronFishTrapBlockEntity(BlockPos pos, BlockState state) {
+        super(FishTrapEntityManager.IRON_FISH_TRAP_ENTITY, pos, state,
+                Fishtraps.fishTrapsConfig.getProperty(FishTrapValues.IRON_TIME),
+                Fishtraps.fishTrapsConfig.getProperty(FishTrapValues.IRON_LURE),
+                Fishtraps.fishTrapsConfig.getProperty(FishTrapValues.IRON_LUCK));
+    }
+
+    @Override
+    public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
+        buf.writeBlockPos(this.pos);
+    }
+
+    @Override
+    public Text getDisplayName() {
+        return Text.translatable("block.fishtraps.iron_fish_trap");
+    }
+
+    @Override
+    public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
+        return new IronFishTrapContainer(syncId, playerInventory, this);
+    }
+}
