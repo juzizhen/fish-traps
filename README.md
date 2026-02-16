@@ -1,7 +1,8 @@
 # Fish Traps Remastered
 
 - [Original Mod Download](https://www.curseforge.com/minecraft/mc-mods/fish-traps)
-- [This Mod Download](https://www.curseforge.com/minecraft/mc-mods/fish-traps-remastered)
+- [This Mod Download (CurseForge)](https://www.curseforge.com/minecraft/mc-mods/fish-traps-remastered)
+- [This Mod Download (Modrinth)](https://modrinth.com/mod/fish-traps-remastered)
 
 ### Description:
 
