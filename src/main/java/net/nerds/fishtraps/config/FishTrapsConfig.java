@@ -1,11 +1,17 @@
 package net.nerds.fishtraps.config;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import net.fabricmc.loader.api.FabricLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class FishTrapsConfig {
 
@@ -43,8 +49,8 @@ public class FishTrapsConfig {
     }
 
     private void setConfigs(FileReader fileReader) {
-            JsonParser parser = new JsonParser();
-            config = parser.parse(fileReader).getAsJsonObject();
+        JsonParser parser = new JsonParser();
+        config = parser.parse(fileReader).getAsJsonObject();
     }
 
 
@@ -66,7 +72,7 @@ public class FishTrapsConfig {
     }
 
     public int getProperty(String key) {
-        try{
+        try {
             return config.get(key).getAsInt();
         } catch (NumberFormatException nex) {
             logger.error("Can not Format the value you entered for {} into a number.  reverting to default", key);
@@ -78,7 +84,7 @@ public class FishTrapsConfig {
     }
 
     public boolean getBooleanProperty(String key) {
-        try{
+        try {
             return config.get(key).getAsBoolean();
         } catch (Exception ex) {
             logger.error("Can not Format the value you entered for {} into a boolean..  reverting to default", key);
