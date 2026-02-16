@@ -59,11 +59,19 @@ java {
 
 jar {
 	inputs.property "archivesName", project.base.archivesName
+	archiveFileName.set("${project.archives_base_name}-${project.minecraft_version}-${project.mod_version}.jar")
 
 	from("LICENSE") {
-		rename { "${it}_${inputs.properties.archivesName}"}
+		rename { "${it}_${inputs.properties.archivesName}" }
 	}
 }
+
+// Loom / Fabric 项目通常会有 remapJar（或 remapShadowJar）作为最终产物，
+// 如果你的构建流程使用 remapJar，需要同时设置它：
+tasks.named("remapJar") {
+	archiveFileName.set("${project.archives_base_name}-${project.minecraft_version}-${project.mod_version}.jar")
+}
+
 
 // configure the maven publication
 publishing {

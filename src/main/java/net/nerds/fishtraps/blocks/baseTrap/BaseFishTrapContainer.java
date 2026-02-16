@@ -59,7 +59,7 @@ public abstract class BaseFishTrapContainer extends ScreenHandler {
 
         if (initSlot.inventory == player.getInventory()) {
             ItemStack baitItem = initSlot.getStack();
-            Slot baitSlot = this.slots.get(0);
+            Slot baitSlot = this.slots.getFirst();
             if (isFishBait(baitItem) && !baitSlot.hasStack()) {
                 baitSlot.setStack(baitItem.copy());
                 initSlot.setStack(ItemStack.EMPTY);

@@ -75,11 +75,11 @@ public abstract class BaseFishTrapBlock extends BlockWithEntity implements Water
 
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
-        return checkType(type, getBlockEntityType(), (world1, pos, state1, be) -> {
-            if (be instanceof BaseFishTrapBlockEntity) {
-                ((BaseFishTrapBlockEntity) be).tick();
+        return type == getBlockEntityType() ? (world1, pos, state1, be) -> {
+            if (be instanceof BaseFishTrapBlockEntity fishTrap) {
+                fishTrap.tick();
             }
-        });
+        } : null;
     }
 
     protected abstract BlockEntityType<?> getBlockEntityType();

@@ -4,7 +4,6 @@ import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -14,7 +13,7 @@ import net.nerds.fishtraps.blocks.FishTrapEntityManager;
 import net.nerds.fishtraps.blocks.baseTrap.BaseFishTrapBlockEntity;
 import net.nerds.fishtraps.config.FishTrapValues;
 
-public class IronFishTrapBlockEntity extends BaseFishTrapBlockEntity implements ExtendedScreenHandlerFactory {
+public class IronFishTrapBlockEntity extends BaseFishTrapBlockEntity implements ExtendedScreenHandlerFactory<BlockPos> {
 
     public IronFishTrapBlockEntity(BlockPos pos, BlockState state) {
         super(FishTrapEntityManager.IRON_FISH_TRAP_ENTITY, pos, state,
@@ -24,8 +23,8 @@ public class IronFishTrapBlockEntity extends BaseFishTrapBlockEntity implements 
     }
 
     @Override
-    public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
-        buf.writeBlockPos(this.pos);
+    public BlockPos getScreenOpeningData(ServerPlayerEntity player) {
+        return this.pos;
     }
 
     @Override

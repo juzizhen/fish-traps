@@ -12,7 +12,7 @@ import net.nerds.fishtraps.Fishtraps;
 @Environment(EnvType.CLIENT)
 public class IronFishTrapGui extends HandledScreen<IronFishTrapContainer> {
 
-    private static final Identifier TEXTURE = new Identifier(Fishtraps.MODID, "textures/gui/fish_trap_gui1.png");
+    private static final Identifier TEXTURE = Identifier.of(Fishtraps.MODID, "textures/gui/fish_trap_gui1.png");
 
     public IronFishTrapGui(IronFishTrapContainer container, PlayerInventory playerInventory, Text title) {
         super(container, playerInventory, title);
@@ -24,7 +24,7 @@ public class IronFishTrapGui extends HandledScreen<IronFishTrapContainer> {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context);
+        this.renderBackground(context, mouseX, mouseY, delta);
         super.render(context, mouseX, mouseY, delta);
         this.drawMouseoverTooltip(context, mouseX, mouseY);
     }

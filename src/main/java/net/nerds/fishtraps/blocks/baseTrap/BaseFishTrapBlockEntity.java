@@ -5,8 +5,9 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -14,7 +15,6 @@ import net.minecraft.inventory.Inventories;
 import net.minecraft.inventory.SidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.loot.LootTable;
 import net.minecraft.loot.LootTables;
 import net.minecraft.loot.context.LootContextParameterSet;
 import net.minecraft.loot.context.LootContextParameters;
@@ -23,6 +23,10 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.world.ServerWorld;
@@ -36,12 +40,10 @@ import net.nerds.fishtraps.config.FishTrapValues;
 import net.nerds.fishtraps.items.FishingBait;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 public abstract class BaseFishTrapBlockEntity extends BlockEntity implements SidedInventory, NamedScreenHandlerFactory {
 
-    private long tickCounter = 0;
     private final long tickValidator;
     private final long tickValidatorPenalty;
     private final long tickCounterChecker;
@@ -49,8 +51,9 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     private final int luckOfTheSeaLevel;
     private final boolean shouldPenalty;
     private final int maxStorage = 46;
-    private boolean showFishBait = false;
     public DefaultedList<ItemStack> inventory;
+    private long tickCounter = 0;
+    private boolean showFishBait = false;
 
     public BaseFishTrapBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, int fishDelay, int lureLevel, int luckOfTheSeaLevel) {
         super(type, pos, state);
@@ -73,7 +76,7 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     }
 
     private long getValidationNumber() {
-        showFishBait = this.inventory.get(0).getCount() > 0;
+        showFishBait = this.inventory.getFirst().getCount() > 0;
         if (!showFishBait && this.shouldPenalty) {
             return this.tickValidatorPenalty;
         } else {
@@ -84,22 +87,22 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     private void validateWaterAndFish() {
         if (world != null) {
             if (!world.isClient) {
-              boolean isSurroundedByWater = true;
-               Iterable<BlockPos> waterCheckIterator = BlockPos.iterate(
-                      new BlockPos(pos.getX() - 1, pos.getY(), pos.getZ() - 1),
-                       new BlockPos(pos.getX() + 1, pos.getY(), pos.getZ() + 1));
+                boolean isSurroundedByWater = true;
+                Iterable<BlockPos> waterCheckIterator = BlockPos.iterate(
+                        new BlockPos(pos.getX() - 1, pos.getY(), pos.getZ() - 1),
+                        new BlockPos(pos.getX() + 1, pos.getY(), pos.getZ() + 1));
 
-               for (BlockPos blockPos : waterCheckIterator) {
-                   Block block = world.getBlockState(blockPos).getBlock();
-                   if (world.getBlockEntity(pos) != null && (block != Blocks.WATER && !(block instanceof BaseFishTrapBlock))) {
-                       isSurroundedByWater = false;
-                       break;
-                  }
-              }
+                for (BlockPos blockPos : waterCheckIterator) {
+                    Block block = world.getBlockState(blockPos).getBlock();
+                    if (world.getBlockEntity(pos) != null && (block != Blocks.WATER && !(block instanceof BaseFishTrapBlock))) {
+                        isSurroundedByWater = false;
+                        break;
+                    }
+                }
 
-              if (isSurroundedByWater) {
-                  fish();
-              }
+                if (isSurroundedByWater) {
+                    fish();
+                }
             }
         }
     }
@@ -107,30 +110,44 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     private void fish() {
         ItemStack itemStack = new ItemStack(Items.FISHING_ROD);
 
-        Map<Enchantment, Integer> enchantments = Map.of(
-                Enchantments.LURE, this.lureLevel,
-                Enchantments.LUCK_OF_THE_SEA, this.luckOfTheSeaLevel
-        );
-        EnchantmentHelper.set(enchantments, itemStack);
+        if (this.world != null && !this.world.isClient) {
+            Registry<Enchantment> enchantmentRegistry = this.world.getRegistryManager().get(RegistryKeys.ENCHANTMENT);
+
+            RegistryEntry<Enchantment> lureEntry = enchantmentRegistry.getEntry(Enchantments.LURE)
+                    .orElseThrow(() -> new IllegalStateException("Missing LURE enchantment"));
+            RegistryEntry<Enchantment> luckEntry = enchantmentRegistry.getEntry(Enchantments.LUCK_OF_THE_SEA)
+                    .orElseThrow(() -> new IllegalStateException("Missing LUCK_OF_THE_SEA enchantment"));
+
+            ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(ItemEnchantmentsComponent.DEFAULT);
+            builder.add(lureEntry, this.lureLevel);
+            builder.add(luckEntry, this.luckOfTheSeaLevel);
+            ItemEnchantmentsComponent component = builder.build();
+
+            itemStack.set(DataComponentTypes.ENCHANTMENTS, component);
+        }
+
 
         LootContextParameterSet.Builder lootContextBuilder = new LootContextParameterSet.Builder((ServerWorld) this.world)
                 .add(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
                 .add(LootContextParameters.TOOL, itemStack)
                 .luck((float) this.luckOfTheSeaLevel);
 
-        LootTable lootTable = Objects.requireNonNull(Objects.requireNonNull(this.world).getServer()).getLootManager()
-                .getLootTable(LootTables.FISHING_GAMEPLAY);
-        List<ItemStack> list = lootTable.generateLoot(lootContextBuilder.build(LootContextTypes.FISHING));
+        List<ItemStack> list = Objects.requireNonNull(Objects.requireNonNull(this.world).getServer())
+                .getReloadableRegistries().getLootTable(LootTables.FISHING_GAMEPLAY)
+                .generateLoot(lootContextBuilder.build(LootContextTypes.FISHING));
 
         addItemsToInventory(list);
 
         if (showFishBait) {
-            ItemStack fishBait = inventory.get(0);
+            ItemStack fishBait = inventory.getFirst();
             if (fishBait.getItem() instanceof FishingBait) {
-                if (fishBait.damage(1, world.random, null)) {
+                int newDamage = fishBait.getDamage() + 1;
+                if (newDamage >= fishBait.getMaxDamage()) {
                     inventory.set(0, ItemStack.EMPTY);
-                    markDirty();
+                } else {
+                    fishBait.setDamage(newDamage);
                 }
+                markDirty();
             }
         }
     }
@@ -156,22 +173,22 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     }
 
     @Override
-    public void readNbt(NbtCompound nbt) {
-        super.readNbt(nbt);
+    public void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
+        super.readNbt(nbt, registryLookup);
         inventory = DefaultedList.ofSize(maxStorage, ItemStack.EMPTY);
-        Inventories.readNbt(nbt, this.inventory);
-        showFishBait = this.inventory.get(0).getCount() > 0;
+        Inventories.readNbt(nbt, this.inventory, registryLookup);
+        showFishBait = this.inventory.getFirst().getCount() > 0;
     }
 
     @Override
-    protected void writeNbt(NbtCompound nbt) {
-        super.writeNbt(nbt);
-        Inventories.writeNbt(nbt, this.inventory);
+    protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
+        super.writeNbt(nbt, registryLookup);
+        Inventories.writeNbt(nbt, this.inventory, registryLookup);
     }
 
     @Override
-    public NbtCompound toInitialChunkDataNbt() {
-        return createNbt();
+    public NbtCompound toInitialChunkDataNbt(RegistryWrapper.WrapperLookup registryLookup) {
+        return createNbt(registryLookup);
     }
 
     @Override

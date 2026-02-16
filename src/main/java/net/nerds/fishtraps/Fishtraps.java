@@ -29,7 +29,7 @@ public class Fishtraps implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        Registry.register(Registries.ITEM_GROUP, new Identifier(MODID, "fishtraps"), FISHTRAPS_GROUP);
+        Registry.register(Registries.ITEM_GROUP, Identifier.of(MODID, "fishtraps"), FISHTRAPS_GROUP);
 
         fishTrapsConfig = new FishTrapsConfig();
         fishTrapsConfig.loadConfig();
