@@ -3,6 +3,7 @@
 - [Original Mod Download](https://www.curseforge.com/minecraft/mc-mods/fish-traps)
 - [This Mod Download (CurseForge)](https://www.curseforge.com/minecraft/mc-mods/fish-traps-remastered)
 - [This Mod Download (Modrinth)](https://modrinth.com/mod/fish-traps-remastered)
+- [Forge Version Repository](https://github.com/juzizhen/fish-traps-forge) 
 
 ### Description:
 
