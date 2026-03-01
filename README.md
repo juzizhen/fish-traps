@@ -12,8 +12,9 @@ mc mod for auto fishing.  Supports both Forge and Fabric.
 
 ### Disclaimer:
 
-- I am not the original creator of the mod! I just ported to 1.20.1 and 1.21.1 Fabric (No forge).
+- I am not the original creator of the mod! I just ported to 1.20.1 and 1.21.1 Fabric.
 - The idea, resources (textures, logo…) and most of the code was created by **@kylertlove**.
+- This repository contains only the **Fabric** version.For the Forge version, please visit the [**Forge repository**](https://github.com/juzizhen/fish-traps-forge).
 
 ### License:
 
