@@ -51,7 +51,7 @@ public abstract class BaseFishTrapContainer extends ScreenHandler {
     @Override
     public ItemStack quickMove(PlayerEntity player, int slotIndex) {
         Slot initSlot = this.slots.get(slotIndex);
-        if (initSlot == null || !initSlot.hasStack()) {
+        if (!initSlot.hasStack()) {
             return ItemStack.EMPTY;
         }
 
