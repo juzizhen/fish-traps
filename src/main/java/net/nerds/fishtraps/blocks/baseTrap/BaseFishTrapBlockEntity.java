@@ -44,13 +44,13 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     private long tickCounter = 0;
     private final long tickValidator;
     private final long tickValidatorPenalty;
-    private final long tickCounterChecker;
     private final int lureLevel;
     private final int luckOfTheSeaLevel;
     private final boolean shouldPenalty;
     private final int maxStorage = 46;
     private boolean showFishBait = false;
     public DefaultedList<ItemStack> inventory;
+    private final boolean workingInLava;
 
     public BaseFishTrapBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, int fishDelay, int lureLevel, int luckOfTheSeaLevel) {
         super(type, pos, state);
@@ -60,13 +60,13 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
         this.lureLevel = lureLevel;
         this.luckOfTheSeaLevel = luckOfTheSeaLevel;
         this.shouldPenalty = Fishtraps.fishTrapsConfig.getBooleanProperty(FishTrapValues.SHOULD_PENALTY_MULTIPLIER);
-        this.tickCounterChecker = this.shouldPenalty ? this.tickValidatorPenalty : this.tickValidator;
+        this.workingInLava = Fishtraps.fishTrapsConfig.getBooleanProperty(FishTrapValues.WORKING_IN_LAVA);
     }
 
     public void tick() {
         if (tickCounter >= getValidationNumber()) {
             tickCounter = 0;
-            validateWaterAndFish();
+            validateLiquidAndFish();
         } else {
             tickCounter++;
         }
@@ -81,25 +81,31 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
         }
     }
 
-    private void validateWaterAndFish() {
+    private void validateLiquidAndFish() {
         if (world != null) {
             if (!world.isClient) {
-              boolean isSurroundedByWater = true;
-               Iterable<BlockPos> waterCheckIterator = BlockPos.iterate(
-                      new BlockPos(pos.getX() - 1, pos.getY(), pos.getZ() - 1),
-                       new BlockPos(pos.getX() + 1, pos.getY(), pos.getZ() + 1));
+                boolean isSurroundedByLiquid = true;
+                Iterable<BlockPos> waterCheckIterator = BlockPos.iterate(
+                        new BlockPos(pos.getX() - 1, pos.getY(), pos.getZ() - 1),
+                        new BlockPos(pos.getX() + 1, pos.getY(), pos.getZ() + 1));
 
-               for (BlockPos blockPos : waterCheckIterator) {
-                   Block block = world.getBlockState(blockPos).getBlock();
-                   if (world.getBlockEntity(pos) != null && (block != Blocks.WATER && !(block instanceof BaseFishTrapBlock))) {
-                       isSurroundedByWater = false;
-                       break;
-                  }
-              }
+                for (BlockPos blockPos : waterCheckIterator) {
+                    Block block = world.getBlockState(blockPos).getBlock();
 
-              if (isSurroundedByWater) {
-                  fish();
-              }
+                    boolean validLiquid = block == Blocks.WATER;
+                    if (workingInLava) {
+                        validLiquid = validLiquid || block == Blocks.LAVA;
+                    }
+
+                    if (world.getBlockEntity(pos) != null && !(validLiquid || block instanceof BaseFishTrapBlock)) {
+                        isSurroundedByLiquid = false;
+                        break;
+                    }
+                }
+
+                if (isSurroundedByLiquid) {
+                    fish();
+                }
             }
         }
     }
