@@ -1,6 +1,5 @@
 package net.nerds.fishtraps.config;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
@@ -19,7 +18,6 @@ public class FishTrapsConfig {
     private final String fishTrapJsonLocation = FabricLoader.getInstance().getConfigDirectory().getPath() + "/fishTrap.json";
     private final File configFile = new File(fishTrapJsonLocation);
     private JsonObject config;
-    private Gson gson;
 
     public void loadConfig() {
         if (!configFile.exists()) {
@@ -68,6 +66,7 @@ public class FishTrapsConfig {
         fishTrapJson.add(FishTrapValues.PENALTY_MULTIPLIER_AMOUNT, new JsonPrimitive(40));
         fishTrapJson.add(FishTrapValues.SHOULD_PENALTY_MULTIPLIER, new JsonPrimitive(true));
         fishTrapJson.add(FishTrapValues.FISH_BAIT_DURABILITY, new JsonPrimitive(400));
+        fishTrapJson.add(FishTrapValues.WORKING_IN_LAVA, new JsonPrimitive(false));
         return fishTrapJson;
     }
 
