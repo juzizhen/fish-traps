@@ -5,7 +5,7 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 
 /**
- * Fish trap loot inventory slot objects.  Basically just copy code from FunaceOutputSlot class.
+ * Output-only inventory slot — prevents item insertion.
  */
 public class OutputSlot extends Slot {
 
@@ -16,9 +16,5 @@ public class OutputSlot extends Slot {
     @Override
     public boolean canInsert(ItemStack itemStack) {
         return false;
-    }
-
-    public ItemStack takeStack(int i) {
-        return super.takeStack(i);
     }
 }

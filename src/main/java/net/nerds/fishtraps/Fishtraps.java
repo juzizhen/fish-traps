@@ -15,7 +15,7 @@ public class Fishtraps implements ModInitializer {
 
     public static final String MODID = "fishtraps";
     public static final ItemGroup FISHTRAPS_GROUP = FabricItemGroup.builder()
-            .icon(() -> new ItemStack(FishTrapsManager.WOODEN_FISH_TRAP))  // 使用鱼笼图标而不是钓鱼竿
+            .icon(() -> new ItemStack(FishTrapsManager.WOODEN_FISH_TRAP))
             .displayName(Text.translatable("itemGroup.fishtraps.fishtraps"))
             .entries((context, entries) -> {
                 entries.add(FishTrapsManager.WOODEN_FISH_TRAP);

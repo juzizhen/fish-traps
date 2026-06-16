@@ -28,7 +28,7 @@ public abstract class BaseFishTrapBlock extends BlockWithEntity implements Water
 
     @Override
     public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
-        throw new Error("Override this, dumbass");
+        throw new UnsupportedOperationException("Subclasses must override createBlockEntity");
     }
 
     @Override

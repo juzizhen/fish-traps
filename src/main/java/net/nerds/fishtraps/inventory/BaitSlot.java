@@ -15,8 +15,4 @@ public class BaitSlot extends Slot {
     public boolean canInsert(ItemStack itemStack) {
         return itemStack.getItem() instanceof FishingBait;
     }
-
-    public ItemStack takeStack(int i) {
-        return super.takeStack(i);
-    }
 }
