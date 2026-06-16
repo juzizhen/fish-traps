@@ -26,9 +26,6 @@
       "net.nerds.fishtraps.FishtrapsClient"
     ]
   },
-  "mixins": [
-
-  ],
 
   "depends": {
     "fabricloader": ">=0.18.4",

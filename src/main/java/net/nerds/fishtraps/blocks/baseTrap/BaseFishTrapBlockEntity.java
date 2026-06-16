@@ -37,9 +37,16 @@ import net.nerds.fishtraps.items.FishingBait;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public abstract class BaseFishTrapBlockEntity extends BlockEntity implements SidedInventory, NamedScreenHandlerFactory {
+
+    private static final int[] AVAILABLE_SLOTS;
+    static {
+        AVAILABLE_SLOTS = new int[46];
+        for (int i = 0; i < 46; i++) {
+            AVAILABLE_SLOTS[i] = i;
+        }
+    }
 
     private long tickCounter = 0;
     private final long tickValidator;
@@ -64,6 +71,7 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     }
 
     public void tick() {
+        showFishBait = !this.inventory.get(0).isEmpty();
         if (tickCounter >= getValidationNumber()) {
             tickCounter = 0;
             validateLiquidAndFish();
@@ -73,40 +81,36 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     }
 
     private long getValidationNumber() {
-        showFishBait = this.inventory.get(0).getCount() > 0;
         if (!showFishBait && this.shouldPenalty) {
             return this.tickValidatorPenalty;
-        } else {
-            return this.tickValidator;
         }
+        return this.tickValidator;
     }
 
     private void validateLiquidAndFish() {
-        if (world != null) {
-            if (!world.isClient) {
-                boolean isSurroundedByLiquid = true;
-                Iterable<BlockPos> waterCheckIterator = BlockPos.iterate(
-                        new BlockPos(pos.getX() - 1, pos.getY(), pos.getZ() - 1),
-                        new BlockPos(pos.getX() + 1, pos.getY(), pos.getZ() + 1));
+        if (world == null || world.isClient) return;
 
-                for (BlockPos blockPos : waterCheckIterator) {
-                    Block block = world.getBlockState(blockPos).getBlock();
+        boolean isSurroundedByLiquid = true;
+        Iterable<BlockPos> waterCheckIterator = BlockPos.iterate(
+                new BlockPos(pos.getX() - 1, pos.getY(), pos.getZ() - 1),
+                new BlockPos(pos.getX() + 1, pos.getY(), pos.getZ() + 1));
 
-                    boolean validLiquid = block == Blocks.WATER;
-                    if (workingInLava) {
-                        validLiquid = validLiquid || block == Blocks.LAVA;
-                    }
+        for (BlockPos blockPos : waterCheckIterator) {
+            Block block = world.getBlockState(blockPos).getBlock();
 
-                    if (world.getBlockEntity(pos) != null && !(validLiquid || block instanceof BaseFishTrapBlock)) {
-                        isSurroundedByLiquid = false;
-                        break;
-                    }
-                }
-
-                if (isSurroundedByLiquid) {
-                    fish();
-                }
+            boolean validLiquid = block == Blocks.WATER;
+            if (workingInLava) {
+                validLiquid = validLiquid || block == Blocks.LAVA;
             }
+
+            if (!(validLiquid || block instanceof BaseFishTrapBlock)) {
+                isSurroundedByLiquid = false;
+                break;
+            }
+        }
+
+        if (isSurroundedByLiquid) {
+            fish();
         }
     }
 
@@ -124,7 +128,7 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
                 .add(LootContextParameters.TOOL, itemStack)
                 .luck((float) this.luckOfTheSeaLevel);
 
-        LootTable lootTable = Objects.requireNonNull(Objects.requireNonNull(this.world).getServer()).getLootManager()
+        LootTable lootTable = this.world.getServer().getLootManager()
                 .getLootTable(LootTables.FISHING_GAMEPLAY);
         List<ItemStack> list = lootTable.generateLoot(lootContextBuilder.build(LootContextTypes.FISHING));
 
@@ -142,11 +146,12 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     }
 
     private void addItemsToInventory(List<ItemStack> itemStackList) {
+        boolean changed = false;
         for (ItemStack itemStack : itemStackList) {
             for (int i = 1; i < inventory.size(); i++) {
                 if (inventory.get(i).isEmpty()) {
                     inventory.set(i, itemStack.copy());
-                    markDirty();
+                    changed = true;
                     break;
                 } else if (ItemStack.areItemsEqual(inventory.get(i), itemStack) &&
                         (inventory.get(i).getCount() + itemStack.getCount() <= itemStack.getMaxCount()) &&
@@ -154,10 +159,13 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
                     ItemStack newStack = itemStack.copy();
                     newStack.setCount(inventory.get(i).getCount() + itemStack.getCount());
                     inventory.set(i, newStack);
-                    markDirty();
+                    changed = true;
                     break;
                 }
             }
+        }
+        if (changed) {
+            markDirty();
         }
     }
 
@@ -234,13 +242,12 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
 
     @Override
     public boolean canPlayerUse(PlayerEntity player) {
-        if (Objects.requireNonNull(this.world).getBlockEntity(this.pos) != this) {
+        if (this.world.getBlockEntity(this.pos) != this) {
             return false;
-        } else {
-            return player.squaredDistanceTo((double) this.pos.getX() + 0.5D,
-                    (double) this.pos.getY() + 0.5D,
-                    (double) this.pos.getZ() + 0.5D) <= 64.0D;
         }
+        return player.squaredDistanceTo((double) this.pos.getX() + 0.5D,
+                (double) this.pos.getY() + 0.5D,
+                (double) this.pos.getZ() + 0.5D) <= 64.0D;
     }
 
     @Override
@@ -253,14 +260,9 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
         return showFishBait;
     }
 
-    // SidedInventory implementation
     @Override
     public int[] getAvailableSlots(Direction side) {
-        int[] arr = new int[46];
-        for (int i = 0; i < 46; i++) {
-            arr[i] = i;
-        }
-        return arr;
+        return AVAILABLE_SLOTS;
     }
 
     @Override

@@ -19,31 +19,22 @@ public class FishTrapsConfig {
             buildFile();
         }
 
-        try {
-            FileReader fileReader = new FileReader(configFile);
-            setConfigs(fileReader);
-            fileReader.close();
-        } catch (IOException e) {
-            logger.error("Failed to load config file", e);
+        try (FileReader fileReader = new FileReader(configFile)) {
+            config = JsonParser.parseReader(fileReader).getAsJsonObject();
+        } catch (Exception e) {
+            logger.error("Failed to load config file, reverting to defaults", e);
             buildFile();
         }
     }
 
     public void buildFile() {
         JsonObject jsonObject = getDefaults();
-        try {
-            FileWriter writer = new FileWriter(fishTrapJsonLocation);
+        try (FileWriter writer = new FileWriter(fishTrapJsonLocation)) {
             writer.write(jsonObject.toString());
-            writer.flush();
         } catch (IOException e) {
             logger.fatal("Config IO Error", e);
         }
         config = jsonObject;
-    }
-
-    private void setConfigs(FileReader fileReader) {
-            JsonParser parser = new JsonParser();
-            config = parser.parse(fileReader).getAsJsonObject();
     }
 
 
