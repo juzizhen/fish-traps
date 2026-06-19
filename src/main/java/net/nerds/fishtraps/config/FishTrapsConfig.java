@@ -15,7 +15,7 @@ import java.io.IOException;
 public class FishTrapsConfig {
 
     private static final Logger logger = LogManager.getLogger();
-    private final String fishTrapJsonLocation = FabricLoader.getInstance().getConfigDirectory().getPath() + "/fishTrap.json";
+    private final String fishTrapJsonLocation = FabricLoader.getInstance().getConfigDir().toAbsolutePath() + "/fishTrap.json";
     private final File configFile = new File(fishTrapJsonLocation);
     private JsonObject config;
 

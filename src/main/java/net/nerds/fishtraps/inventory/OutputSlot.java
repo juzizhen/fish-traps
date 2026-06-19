@@ -1,20 +1,17 @@
 package net.nerds.fishtraps.inventory;
 
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 
-/**
- * Output-only inventory slot — prevents item insertion.
- */
 public class OutputSlot extends Slot {
 
-    public OutputSlot(Inventory inventory, int invIndex, int x, int y) {
+    public OutputSlot(Container inventory, int invIndex, int x, int y) {
         super(inventory, invIndex, x, y);
     }
 
     @Override
-    public boolean canInsert(ItemStack itemStack) {
+    public boolean mayPlace(ItemStack itemStack) {
         return false;
     }
 }

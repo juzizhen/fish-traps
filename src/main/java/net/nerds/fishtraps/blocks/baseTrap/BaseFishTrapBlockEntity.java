@@ -1,47 +1,51 @@
 package net.nerds.fishtraps.blocks.baseTrap;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ItemEnchantmentsComponent;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventories;
-import net.minecraft.inventory.SidedInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.loot.LootTables;
-import net.minecraft.loot.context.LootContextParameterSet;
-import net.minecraft.loot.context.LootContextParameters;
-import net.minecraft.loot.context.LootContextTypes;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.listener.ClientPlayPacketListener;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.screen.NamedScreenHandlerFactory;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.collection.DefaultedList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.WorldlyContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.level.storage.loot.BuiltInLootTables;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.resources.ResourceKey;
 import net.nerds.fishtraps.Fishtraps;
 import net.nerds.fishtraps.config.FishTrapValues;
 import net.nerds.fishtraps.items.FishingBait;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public abstract class BaseFishTrapBlockEntity extends BlockEntity implements SidedInventory, NamedScreenHandlerFactory {
+public abstract class BaseFishTrapBlockEntity extends BlockEntity implements WorldlyContainer, MenuProvider {
 
     private static final int[] AVAILABLE_SLOTS;
     static {
@@ -57,21 +61,25 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     private final int luckOfTheSeaLevel;
     private final boolean shouldPenalty;
     private final int maxStorage = 46;
-    public DefaultedList<ItemStack> inventory;
+    public NonNullList<ItemStack> inventory;
     private long tickCounter = 0;
     private boolean showFishBait = false;
     private final boolean workingInLava;
+    private final ResourceKey<LootTable> lootTableKey;
 
-    public BaseFishTrapBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, int fishDelay, int lureLevel, int luckOfTheSeaLevel) {
+    public BaseFishTrapBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, int fishDelay, int lureLevel, int luckOfTheSeaLevel, ResourceKey<LootTable> lootTableKey) {
         super(type, pos, state);
-        inventory = DefaultedList.ofSize(maxStorage, ItemStack.EMPTY);
+        inventory = NonNullList.withSize(maxStorage, ItemStack.EMPTY);
         this.tickValidator = fishDelay;
         this.tickValidatorPenalty = this.tickValidator * Fishtraps.fishTrapsConfig.getProperty(FishTrapValues.PENALTY_MULTIPLIER_AMOUNT);
         this.lureLevel = lureLevel;
         this.luckOfTheSeaLevel = luckOfTheSeaLevel;
         this.shouldPenalty = Fishtraps.fishTrapsConfig.getBooleanProperty(FishTrapValues.SHOULD_PENALTY_MULTIPLIER);
         this.workingInLava = Fishtraps.fishTrapsConfig.getBooleanProperty(FishTrapValues.WORKING_IN_LAVA);
+        this.lootTableKey = lootTableKey;
     }
+
+    public static boolean accelerationEnabled = false;
 
     public void tick() {
         showFishBait = !this.inventory.getFirst().isEmpty();
@@ -79,7 +87,7 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
             tickCounter = 0;
             validateLiquidAndFish();
         } else {
-            tickCounter++;
+            tickCounter += accelerationEnabled ? 64 : 1;
         }
     }
 
@@ -91,15 +99,15 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     }
 
     private void validateLiquidAndFish() {
-        if (world == null || world.isClient) return;
+        if (level == null || level.isClientSide()) return;
 
         boolean isSurroundedByLiquid = true;
-        Iterable<BlockPos> waterCheckIterator = BlockPos.iterate(
-                new BlockPos(pos.getX() - 1, pos.getY(), pos.getZ() - 1),
-                new BlockPos(pos.getX() + 1, pos.getY(), pos.getZ() + 1));
+        Iterable<BlockPos> waterCheckIterator = BlockPos.betweenClosed(
+                new BlockPos(worldPosition.getX() - 1, worldPosition.getY(), worldPosition.getZ() - 1),
+                new BlockPos(worldPosition.getX() + 1, worldPosition.getY(), worldPosition.getZ() + 1));
 
         for (BlockPos blockPos : waterCheckIterator) {
-            Block block = world.getBlockState(blockPos).getBlock();
+            Block block = level.getBlockState(blockPos).getBlock();
 
             boolean validLiquid = block == Blocks.WATER;
             if (workingInLava) {
@@ -120,43 +128,49 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     private void fish() {
         ItemStack itemStack = new ItemStack(Items.FISHING_ROD);
 
-        if (this.world != null && !this.world.isClient) {
-            Registry<Enchantment> enchantmentRegistry = this.world.getRegistryManager().get(RegistryKeys.ENCHANTMENT);
+        if (this.level != null && !this.level.isClientSide()) {
+            net.minecraft.core.Registry<Enchantment> enchantmentRegistry = this.level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
 
-            RegistryEntry<Enchantment> lureEntry = enchantmentRegistry.getEntry(Enchantments.LURE)
-                    .orElseThrow(() -> new IllegalStateException("Missing LURE enchantment"));
-            RegistryEntry<Enchantment> luckEntry = enchantmentRegistry.getEntry(Enchantments.LUCK_OF_THE_SEA)
-                    .orElseThrow(() -> new IllegalStateException("Missing LUCK_OF_THE_SEA enchantment"));
+            Holder<Enchantment> lureEntry = enchantmentRegistry.getOrThrow(Enchantments.LURE);
+            Holder<Enchantment> luckEntry = enchantmentRegistry.getOrThrow(Enchantments.LUCK_OF_THE_SEA);
 
-            ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(ItemEnchantmentsComponent.DEFAULT);
-            builder.add(lureEntry, this.lureLevel);
-            builder.add(luckEntry, this.luckOfTheSeaLevel);
-            ItemEnchantmentsComponent component = builder.build();
+            ItemEnchantments.Mutable builder = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+            builder.set(lureEntry, this.lureLevel);
+            builder.set(luckEntry, this.luckOfTheSeaLevel);
+            ItemEnchantments enchantments = builder.toImmutable();
 
-            itemStack.set(DataComponentTypes.ENCHANTMENTS, component);
+            itemStack.set(DataComponents.ENCHANTMENTS, enchantments);
         }
 
-        LootContextParameterSet.Builder lootContextBuilder = new LootContextParameterSet.Builder((ServerWorld) this.world)
-                .add(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
-                .add(LootContextParameters.TOOL, itemStack)
-                .luck((float) this.luckOfTheSeaLevel);
+        if (this.level == null) return;
+        ServerLevel serverLevel = (ServerLevel) this.level;
+        LootParams.Builder lootParamsBuilder = new LootParams.Builder(serverLevel)
+                .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(worldPosition))
+                .withParameter(LootContextParams.TOOL, itemStack)
+                .withLuck((float) this.luckOfTheSeaLevel);
 
-        List<ItemStack> list = this.world.getServer()
-                .getReloadableRegistries().getLootTable(LootTables.FISHING_GAMEPLAY)
-                .generateLoot(lootContextBuilder.build(LootContextTypes.FISHING));
+        LootTable lootTable = serverLevel.getServer()
+                .reloadableRegistries().getLootTable(this.lootTableKey);
+        if (lootTable == LootTable.EMPTY) {
+            lootTable = serverLevel.getServer()
+                    .reloadableRegistries().getLootTable(BuiltInLootTables.FISHING);
+        }
+
+        List<ItemStack> list = new ArrayList<>();
+        lootTable.getRandomItems(lootParamsBuilder.create(LootContextParamSets.FISHING), list::add);
 
         addItemsToInventory(list);
 
         if (showFishBait) {
             ItemStack fishBait = inventory.getFirst();
             if (fishBait.getItem() instanceof FishingBait) {
-                int newDamage = fishBait.getDamage() + 1;
-                if (newDamage >= fishBait.getMaxDamage()) {
-                    inventory.set(0, ItemStack.EMPTY);
+                int remainingUses = FishingBait.getRemainingUses(fishBait) - 1;
+                if (remainingUses <= 0) {
+                    fishBait.shrink(1);
                 } else {
-                    fishBait.setDamage(newDamage);
+                    FishingBait.setRemainingUses(fishBait, remainingUses);
                 }
-                markDirty();
+                setChanged();
             }
         }
     }
@@ -169,8 +183,8 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
                     inventory.set(i, itemStack.copy());
                     changed = true;
                     break;
-                } else if (ItemStack.areItemsEqual(inventory.get(i), itemStack) &&
-                        (inventory.get(i).getCount() + itemStack.getCount() <= itemStack.getMaxCount()) &&
+                } else if (ItemStack.isSameItem(inventory.get(i), itemStack) &&
+                        (inventory.get(i).getCount() + itemStack.getCount() <= itemStack.getMaxStackSize()) &&
                         itemStack.isStackable()) {
                     ItemStack newStack = itemStack.copy();
                     newStack.setCount(inventory.get(i).getCount() + itemStack.getCount());
@@ -181,36 +195,36 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
             }
         }
         if (changed) {
-            markDirty();
+            setChanged();
         }
     }
 
     @Override
-    public void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
-        super.readNbt(nbt, registryLookup);
-        inventory = DefaultedList.ofSize(maxStorage, ItemStack.EMPTY);
-        Inventories.readNbt(nbt, this.inventory, registryLookup);
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        inventory = NonNullList.withSize(maxStorage, ItemStack.EMPTY);
+        ContainerHelper.loadAllItems(input, this.inventory);
         showFishBait = this.inventory.getFirst().getCount() > 0;
     }
 
     @Override
-    protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
-        super.writeNbt(nbt, registryLookup);
-        Inventories.writeNbt(nbt, this.inventory, registryLookup);
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        ContainerHelper.saveAllItems(output, this.inventory);
     }
 
     @Override
-    public NbtCompound toInitialChunkDataNbt(RegistryWrapper.WrapperLookup registryLookup) {
-        return createNbt(registryLookup);
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        return saveWithoutMetadata(registries);
     }
 
     @Override
-    public Packet<ClientPlayPacketListener> toUpdatePacket() {
-        return BlockEntityUpdateS2CPacket.create(this);
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 
     @Override
-    public int size() {
+    public int getContainerSize() {
         return inventory.size();
     }
 
@@ -225,51 +239,51 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     }
 
     @Override
-    public ItemStack getStack(int slot) {
+    public ItemStack getItem(int slot) {
         return inventory.get(slot);
     }
 
     @Override
-    public ItemStack removeStack(int slot, int amount) {
-        ItemStack result = Inventories.splitStack(inventory, slot, amount);
+    public ItemStack removeItem(int slot, int amount) {
+        ItemStack result = ContainerHelper.removeItem(inventory, slot, amount);
         if (!result.isEmpty()) {
-            markDirty();
+            setChanged();
         }
         return result;
     }
 
     @Override
-    public ItemStack removeStack(int slot) {
-        ItemStack result = Inventories.removeStack(inventory, slot);
+    public ItemStack removeItemNoUpdate(int slot) {
+        ItemStack result = ContainerHelper.takeItem(inventory, slot);
         if (!result.isEmpty()) {
-            markDirty();
+            setChanged();
         }
         return result;
     }
 
     @Override
-    public void setStack(int slot, ItemStack stack) {
+    public void setItem(int slot, ItemStack stack) {
         inventory.set(slot, stack);
-        if (stack.getCount() > getMaxCountPerStack()) {
-            stack.setCount(getMaxCountPerStack());
+        if (stack.getCount() > stack.getMaxStackSize()) {
+            stack.setCount(stack.getMaxStackSize());
         }
-        markDirty();
+        setChanged();
     }
 
     @Override
-    public boolean canPlayerUse(PlayerEntity player) {
-        if (this.world.getBlockEntity(this.pos) != this) {
+    public boolean stillValid(Player player) {
+        if (this.level.getBlockEntity(this.worldPosition) != this) {
             return false;
         }
-        return player.squaredDistanceTo((double) this.pos.getX() + 0.5D,
-                (double) this.pos.getY() + 0.5D,
-                (double) this.pos.getZ() + 0.5D) <= 64.0D;
+        return player.distanceToSqr((double) this.worldPosition.getX() + 0.5D,
+                (double) this.worldPosition.getY() + 0.5D,
+                (double) this.worldPosition.getZ() + 0.5D) <= 64.0D;
     }
 
     @Override
-    public void clear() {
+    public void clearContent() {
         inventory.clear();
-        markDirty();
+        setChanged();
     }
 
     public boolean showFishBait() {
@@ -277,23 +291,23 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     }
 
     @Override
-    public int[] getAvailableSlots(Direction side) {
+    public int[] getSlotsForFace(Direction side) {
         return AVAILABLE_SLOTS;
     }
 
     @Override
-    public boolean canInsert(int slot, ItemStack stack, Direction dir) {
+    public boolean canPlaceItemThroughFace(int slot, ItemStack stack, Direction dir) {
         return slot == 0 && stack.getItem() instanceof FishingBait;
     }
 
     @Override
-    public boolean canExtract(int slot, ItemStack stack, Direction dir) {
+    public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction dir) {
         return dir == Direction.DOWN && slot > 0;
     }
 
     @Override
-    public abstract Text getDisplayName();
+    public abstract Component getDisplayName();
 
     @Override
-    public abstract ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player);
+    public abstract AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player);
 }

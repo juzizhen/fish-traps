@@ -2,42 +2,29 @@ package net.nerds.fishtraps.blocks.ironFishTrap;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.player.Inventory;
 import net.nerds.fishtraps.Fishtraps;
 
 @Environment(EnvType.CLIENT)
-public class IronFishTrapGui extends HandledScreen<IronFishTrapContainer> {
+public class IronFishTrapGui extends AbstractContainerScreen<IronFishTrapContainer> {
 
-    private static final Identifier TEXTURE = Identifier.of(Fishtraps.MODID, "textures/gui/fish_trap_gui1.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Fishtraps.MODID, "textures/gui/fish_trap_gui1.png");
 
-    public IronFishTrapGui(IronFishTrapContainer container, PlayerInventory playerInventory, Text title) {
-        super(container, playerInventory, title);
-        this.backgroundHeight = 133 + 5 * 18;
-        this.playerInventoryTitleY = this.backgroundHeight - 94;
-        this.titleX = 8;
-        this.titleY = 6;
+    public IronFishTrapGui(IronFishTrapContainer container, Inventory playerInventory, Component title) {
+        super(container, playerInventory, title, 176, 133 + 5 * 18);
+        this.inventoryLabelY = this.imageHeight + 100;
+        this.titleLabelX = 8;
+        this.titleLabelY = 6;
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context, mouseX, mouseY, delta);
-        super.render(context, mouseX, mouseY, delta);
-        this.drawMouseoverTooltip(context, mouseX, mouseY);
-    }
-
-    @Override
-    protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
-        int x = (width - backgroundWidth) / 2;
-        int y = (height - backgroundHeight) / 2;
-        context.drawTexture(TEXTURE, x, y, 0, 0, backgroundWidth, backgroundHeight);
-    }
-
-    @Override
-    protected void drawForeground(DrawContext context, int mouseX, int mouseY) {
-        context.drawText(this.textRenderer, this.title, this.titleX, this.titleY, 0x404040, false);
+    public void extractBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractBackground(context, mouseX, mouseY, delta);
+        context.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, 256, 256);
     }
 }
