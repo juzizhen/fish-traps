@@ -3,6 +3,7 @@ package net.nerds.fishtraps.blocks;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuType;
+import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
@@ -38,28 +39,28 @@ public class FishTrapEntityManager {
         WOODEN_FISH_TRAP_ENTITY = Registry.register(
                 BuiltInRegistries.BLOCK_ENTITY_TYPE,
                 Identifier.fromNamespaceAndPath(Fishtraps.MODID, "wooden_fish_trap_entity"),
-                new BlockEntityType<>(
+                FabricBlockEntityTypeBuilder.create(
                         WoodenFishTrapBlockEntity::new,
-                        java.util.Set.of(FishTrapsManager.WOODEN_FISH_TRAP)
-                )
+                        FishTrapsManager.WOODEN_FISH_TRAP
+                ).build()
         );
 
         IRON_FISH_TRAP_ENTITY = Registry.register(
                 BuiltInRegistries.BLOCK_ENTITY_TYPE,
                 Identifier.fromNamespaceAndPath(Fishtraps.MODID, "iron_fish_trap_entity"),
-                new BlockEntityType<>(
+                FabricBlockEntityTypeBuilder.create(
                         IronFishTrapBlockEntity::new,
-                        java.util.Set.of(FishTrapsManager.IRON_FISH_TRAP)
-                )
+                        FishTrapsManager.IRON_FISH_TRAP
+                ).build()
         );
 
         DIAMOND_FISH_TRAP_ENTITY = Registry.register(
                 BuiltInRegistries.BLOCK_ENTITY_TYPE,
                 Identifier.fromNamespaceAndPath(Fishtraps.MODID, "diamond_fish_trap_entity"),
-                new BlockEntityType<>(
+                FabricBlockEntityTypeBuilder.create(
                         DiamondFishTrapBlockEntity::new,
-                        java.util.Set.of(FishTrapsManager.DIAMOND_FISH_TRAP)
-                )
+                        FishTrapsManager.DIAMOND_FISH_TRAP
+                ).build()
         );
     }
 
