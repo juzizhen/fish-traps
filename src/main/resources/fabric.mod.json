@@ -26,15 +26,11 @@
       "net.nerds.fishtraps.FishtrapsClient"
     ]
   },
-  "mixins": [  ],
 
   "depends": {
     "fabricloader": ">=0.18.4",
     "fabric-api": "*",
     "java": ">=21",
-    "minecraft": "1.21.1"
-  },
-  "suggests": {
-    "flamingo": "*"
+    "minecraft": "1.21.11"
   }
 }

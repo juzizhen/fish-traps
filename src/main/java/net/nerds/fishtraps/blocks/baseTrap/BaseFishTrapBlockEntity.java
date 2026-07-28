@@ -16,20 +16,17 @@ import net.minecraft.inventory.SidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.loot.LootTables;
-import net.minecraft.loot.context.LootContextParameterSet;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.loot.context.LootContextTypes;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.listener.ClientPlayPacketListener;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
+import net.minecraft.loot.context.LootWorldContext;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
@@ -44,6 +41,7 @@ import java.util.List;
 public abstract class BaseFishTrapBlockEntity extends BlockEntity implements SidedInventory, NamedScreenHandlerFactory {
 
     private static final int[] AVAILABLE_SLOTS;
+
     static {
         AVAILABLE_SLOTS = new int[46];
         for (int i = 0; i < 46; i++) {
@@ -57,10 +55,10 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     private final int luckOfTheSeaLevel;
     private final boolean shouldPenalty;
     private final int maxStorage = 46;
+    private final boolean workingInLava;
     public DefaultedList<ItemStack> inventory;
     private long tickCounter = 0;
     private boolean showFishBait = false;
-    private final boolean workingInLava;
 
     public BaseFishTrapBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, int fishDelay, int lureLevel, int luckOfTheSeaLevel) {
         super(type, pos, state);
@@ -91,7 +89,7 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     }
 
     private void validateLiquidAndFish() {
-        if (world == null || world.isClient) return;
+        if (world == null || world.isClient()) return;
 
         boolean isSurroundedByLiquid = true;
         Iterable<BlockPos> waterCheckIterator = BlockPos.iterate(
@@ -120,13 +118,11 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     private void fish() {
         ItemStack itemStack = new ItemStack(Items.FISHING_ROD);
 
-        if (this.world != null && !this.world.isClient) {
-            Registry<Enchantment> enchantmentRegistry = this.world.getRegistryManager().get(RegistryKeys.ENCHANTMENT);
+        if (this.world != null && !this.world.isClient()) {
+            Registry<Enchantment> enchantmentRegistry = this.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
 
-            RegistryEntry<Enchantment> lureEntry = enchantmentRegistry.getEntry(Enchantments.LURE)
-                    .orElseThrow(() -> new IllegalStateException("Missing LURE enchantment"));
-            RegistryEntry<Enchantment> luckEntry = enchantmentRegistry.getEntry(Enchantments.LUCK_OF_THE_SEA)
-                    .orElseThrow(() -> new IllegalStateException("Missing LUCK_OF_THE_SEA enchantment"));
+            RegistryEntry<Enchantment> lureEntry = enchantmentRegistry.getOrThrow(Enchantments.LURE);
+            RegistryEntry<Enchantment> luckEntry = enchantmentRegistry.getOrThrow(Enchantments.LUCK_OF_THE_SEA);
 
             ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(ItemEnchantmentsComponent.DEFAULT);
             builder.add(lureEntry, this.lureLevel);
@@ -136,14 +132,16 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
             itemStack.set(DataComponentTypes.ENCHANTMENTS, component);
         }
 
-        LootContextParameterSet.Builder lootContextBuilder = new LootContextParameterSet.Builder((ServerWorld) this.world)
+        LootWorldContext.Builder worldCtxBuilder = new LootWorldContext.Builder((ServerWorld) this.world)
                 .add(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
                 .add(LootContextParameters.TOOL, itemStack)
                 .luck((float) this.luckOfTheSeaLevel);
 
+        LootWorldContext worldCtx = worldCtxBuilder.build(LootContextTypes.FISHING);
+
         List<ItemStack> list = this.world.getServer()
                 .getReloadableRegistries().getLootTable(LootTables.FISHING_GAMEPLAY)
-                .generateLoot(lootContextBuilder.build(LootContextTypes.FISHING));
+                .generateLoot(worldCtx);
 
         addItemsToInventory(list);
 
@@ -186,27 +184,17 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     }
 
     @Override
-    public void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
-        super.readNbt(nbt, registryLookup);
+    protected void readData(ReadView view) {
+        super.readData(view);
         inventory = DefaultedList.ofSize(maxStorage, ItemStack.EMPTY);
-        Inventories.readNbt(nbt, this.inventory, registryLookup);
+        Inventories.readData(view, this.inventory);
         showFishBait = this.inventory.getFirst().getCount() > 0;
     }
 
     @Override
-    protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
-        super.writeNbt(nbt, registryLookup);
-        Inventories.writeNbt(nbt, this.inventory, registryLookup);
-    }
-
-    @Override
-    public NbtCompound toInitialChunkDataNbt(RegistryWrapper.WrapperLookup registryLookup) {
-        return createNbt(registryLookup);
-    }
-
-    @Override
-    public Packet<ClientPlayPacketListener> toUpdatePacket() {
-        return BlockEntityUpdateS2CPacket.create(this);
+    protected void writeData(WriteView view) {
+        super.writeData(view);
+        Inventories.writeData(view, this.inventory);
     }
 
     @Override

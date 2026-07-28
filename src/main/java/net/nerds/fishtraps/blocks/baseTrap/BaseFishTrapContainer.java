@@ -21,7 +21,7 @@ public abstract class BaseFishTrapContainer extends ScreenHandler {
         super(type, syncId);
         this.inventory = inventory;
         this.playerInventory = playerInventory;
-        this.world = playerInventory.player.getWorld();
+        this.world = playerInventory.player.getEntityWorld();
 
         int invCountNum = 0;
         this.addSlot(new BaitSlot(inventory, invCountNum++, 8, 118));

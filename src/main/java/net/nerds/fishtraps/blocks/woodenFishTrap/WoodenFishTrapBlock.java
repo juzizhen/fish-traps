@@ -1,26 +1,31 @@
 package net.nerds.fishtraps.blocks.woodenFishTrap;
 
 import com.mojang.serialization.MapCodec;
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
+import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.nerds.fishtraps.Fishtraps;
 import net.nerds.fishtraps.blocks.FishTrapEntityManager;
 import net.nerds.fishtraps.blocks.baseTrap.BaseFishTrapBlock;
 
 public class WoodenFishTrapBlock extends BaseFishTrapBlock {
 
     public WoodenFishTrapBlock() {
-        super(FabricBlockSettings
-                .copyOf(Blocks.OAK_PLANKS)
+        super(AbstractBlock.Settings.copy(Blocks.OAK_PLANKS)
+                .registryKey(RegistryKey.of(RegistryKeys.BLOCK,
+                        Identifier.of(Fishtraps.MODID, "wooden_fish_trap")))
                 .hardness(3.5f)
                 .nonOpaque());
     }
@@ -37,7 +42,7 @@ public class WoodenFishTrapBlock extends BaseFishTrapBlock {
 
     @Override
     public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit) {
-        if (!world.isClient) {
+        if (!world.isClient()) {
             NamedScreenHandlerFactory screenHandlerFactory = state.createScreenHandlerFactory(world, pos);
             if (screenHandlerFactory != null) {
                 player.openHandledScreen(screenHandlerFactory);
@@ -48,7 +53,7 @@ public class WoodenFishTrapBlock extends BaseFishTrapBlock {
 
     @Override
     protected MapCodec<? extends BlockWithEntity> getCodec() {
-        return null;
+        return createCodec(settings -> new WoodenFishTrapBlock());
     }
 
     @Override

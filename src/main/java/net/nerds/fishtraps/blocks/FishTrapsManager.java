@@ -4,6 +4,8 @@ import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
 import net.nerds.fishtraps.Fishtraps;
 import net.nerds.fishtraps.blocks.diamondFishTrap.DiamondFishTrapBlock;
@@ -26,17 +28,23 @@ public class FishTrapsManager {
     }
 
     private static void blockInit() {
-        Registry.register(Registries.BLOCK, Identifier.of(Fishtraps.MODID, "wooden_fish_trap"), WOODEN_FISH_TRAP);
-        Registry.register(Registries.ITEM, Identifier.of(Fishtraps.MODID, "wooden_fish_trap"),
-                new BlockItem(WOODEN_FISH_TRAP, new Item.Settings()));
+        Identifier woodenId = Identifier.of(Fishtraps.MODID, "wooden_fish_trap");
+        Registry.register(Registries.BLOCK, woodenId, WOODEN_FISH_TRAP);
+        Registry.register(Registries.ITEM, woodenId,
+                new BlockItem(WOODEN_FISH_TRAP,
+                        new Item.Settings().registryKey(RegistryKey.of(RegistryKeys.ITEM, woodenId))));
 
-        Registry.register(Registries.BLOCK, Identifier.of(Fishtraps.MODID, "iron_fish_trap"), IRON_FISH_TRAP);
-        Registry.register(Registries.ITEM, Identifier.of(Fishtraps.MODID, "iron_fish_trap"),
-                new BlockItem(IRON_FISH_TRAP, new Item.Settings()));
+        Identifier ironId = Identifier.of(Fishtraps.MODID, "iron_fish_trap");
+        Registry.register(Registries.BLOCK, ironId, IRON_FISH_TRAP);
+        Registry.register(Registries.ITEM, ironId,
+                new BlockItem(IRON_FISH_TRAP,
+                        new Item.Settings().registryKey(RegistryKey.of(RegistryKeys.ITEM, ironId))));
 
-        Registry.register(Registries.BLOCK, Identifier.of(Fishtraps.MODID, "diamond_fish_trap"), DIAMOND_FISH_TRAP);
-        Registry.register(Registries.ITEM, Identifier.of(Fishtraps.MODID, "diamond_fish_trap"),
-                new BlockItem(DIAMOND_FISH_TRAP, new Item.Settings()));
+        Identifier diamondId = Identifier.of(Fishtraps.MODID, "diamond_fish_trap");
+        Registry.register(Registries.BLOCK, diamondId, DIAMOND_FISH_TRAP);
+        Registry.register(Registries.ITEM, diamondId,
+                new BlockItem(DIAMOND_FISH_TRAP,
+                        new Item.Settings().registryKey(RegistryKey.of(RegistryKeys.ITEM, diamondId))));
     }
 
     private static void itemInit() {

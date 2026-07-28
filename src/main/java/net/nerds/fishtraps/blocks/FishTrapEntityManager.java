@@ -69,7 +69,7 @@ public class FishTrapEntityManager {
                 new ExtendedScreenHandlerType<>(
                         (int syncId, PlayerInventory inventory, BlockPos pos) -> {
                             WoodenFishTrapBlockEntity blockEntity =
-                                    (WoodenFishTrapBlockEntity) inventory.player.getWorld().getBlockEntity(pos);
+                                    (WoodenFishTrapBlockEntity) inventory.player.getEntityWorld().getBlockEntity(pos);
                             return new WoodenFishTrapContainer(syncId, inventory, blockEntity);
                         },
                         BlockPos.PACKET_CODEC
@@ -84,7 +84,7 @@ public class FishTrapEntityManager {
                 new ExtendedScreenHandlerType<>(
                         (int syncId, PlayerInventory inventory, BlockPos pos) -> {
                             IronFishTrapBlockEntity blockEntity =
-                                    (IronFishTrapBlockEntity) inventory.player.getWorld().getBlockEntity(pos);
+                                    (IronFishTrapBlockEntity) inventory.player.getEntityWorld().getBlockEntity(pos);
                             return new IronFishTrapContainer(syncId, inventory, blockEntity);
                         },
                         BlockPos.PACKET_CODEC
@@ -99,7 +99,7 @@ public class FishTrapEntityManager {
                 new ExtendedScreenHandlerType<>(
                         (int syncId, PlayerInventory inventory, BlockPos pos) -> {
                             DiamondFishTrapBlockEntity blockEntity =
-                                    (DiamondFishTrapBlockEntity) inventory.player.getWorld().getBlockEntity(pos);
+                                    (DiamondFishTrapBlockEntity) inventory.player.getEntityWorld().getBlockEntity(pos);
                             return new DiamondFishTrapContainer(syncId, inventory, blockEntity);
                         },
                         BlockPos.PACKET_CODEC

@@ -1,9 +1,9 @@
 package net.nerds.fishtraps;
 
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
+import net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap;
 import net.minecraft.client.gui.screen.ingame.HandledScreens;
-import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.BlockRenderLayer;
 import net.nerds.fishtraps.blocks.FishTrapEntityManager;
 import net.nerds.fishtraps.blocks.FishTrapsManager;
 import net.nerds.fishtraps.blocks.diamondFishTrap.DiamondFishTrapGui;
@@ -17,7 +17,7 @@ public class FishtrapsClient implements ClientModInitializer {
         FishTrapEntityManager.registerEntityRenderers();
         this.registerClientGuis();
 
-        BlockRenderLayerMap.INSTANCE.putBlocks(RenderLayer.getCutout(),
+        BlockRenderLayerMap.putBlocks(BlockRenderLayer.CUTOUT,
                 FishTrapsManager.WOODEN_FISH_TRAP,
                 FishTrapsManager.IRON_FISH_TRAP,
                 FishTrapsManager.DIAMOND_FISH_TRAP);
