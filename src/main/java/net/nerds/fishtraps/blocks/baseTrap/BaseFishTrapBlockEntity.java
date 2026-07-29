@@ -148,11 +148,17 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
         if (showFishBait) {
             ItemStack fishBait = inventory.getFirst();
             if (fishBait.getItem() instanceof FishingBait) {
-                int newDamage = fishBait.getDamage() + 1;
-                if (newDamage >= fishBait.getMaxDamage()) {
-                    inventory.set(0, ItemStack.EMPTY);
+                int currentDamage = fishBait.getOrDefault(FishingBait.BAIT_DAMAGE, 0);
+                int newDamage = currentDamage + 1;
+                if (newDamage >= FishingBait.getMaxBaitDamage()) {
+                    if (fishBait.getCount() > 1) {
+                        fishBait.decrement(1);
+                        fishBait.set(FishingBait.BAIT_DAMAGE, 0);
+                    } else {
+                        inventory.set(0, ItemStack.EMPTY);
+                    }
                 } else {
-                    fishBait.setDamage(newDamage);
+                    fishBait.set(FishingBait.BAIT_DAMAGE, newDamage);
                 }
                 markDirty();
             }

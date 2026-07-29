@@ -15,4 +15,9 @@ public class BaitSlot extends Slot {
     public boolean canInsert(ItemStack itemStack) {
         return itemStack.getItem() instanceof FishingBait;
     }
+
+    @Override
+    public int getMaxItemCount(ItemStack stack) {
+        return 1;
+    }
 }

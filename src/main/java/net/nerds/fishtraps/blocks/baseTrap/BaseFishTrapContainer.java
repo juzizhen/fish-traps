@@ -50,33 +50,48 @@ public abstract class BaseFishTrapContainer extends ScreenHandler {
 
     @Override
     public ItemStack quickMove(PlayerEntity player, int slotIndex) {
-        Slot initSlot = this.slots.get(slotIndex);
-        if (!initSlot.hasStack()) {
-            return ItemStack.EMPTY;
-        }
+        ItemStack newStack = ItemStack.EMPTY;
+        Slot slot = this.slots.get(slotIndex);
 
-        ItemStack originalItem = initSlot.getStack().copy();
+        if (slot != null && slot.hasStack()) {
+            ItemStack originalStack = slot.getStack();
+            newStack = originalStack.copy();
 
-        if (initSlot.inventory == player.getInventory()) {
-            ItemStack baitItem = initSlot.getStack();
-            Slot baitSlot = this.slots.getFirst();
-            if (isFishBait(baitItem) && !baitSlot.hasStack()) {
-                baitSlot.setStack(baitItem.copy());
-                initSlot.setStack(ItemStack.EMPTY);
-                return originalItem;
+            int baitSlotIndex = 0;
+            int playerInvStart = 1;
+            int playerInvEnd = this.slots.size();
+
+            if (slotIndex != baitSlotIndex) {
+                if (originalStack.getItem() instanceof FishingBait) {
+                    ItemStack singleItem = originalStack.copyWithCount(1);
+
+                    if (this.insertItem(singleItem, baitSlotIndex, baitSlotIndex + 1, false)) {
+                        originalStack.decrement(1);
+                        if (originalStack.isEmpty()) {
+                            slot.setStack(ItemStack.EMPTY);
+                        } else {
+                            slot.markDirty();
+                        }
+                    } else {
+                        return ItemStack.EMPTY;
+                    }
+                } else {
+                    return ItemStack.EMPTY;
+                }
             }
-            return ItemStack.EMPTY;
-        } else {
-            if (player.getInventory().insertStack(originalItem)) {
-                initSlot.setStack(ItemStack.EMPTY);
-                return originalItem;
-            } else {
-                return ItemStack.EMPTY;
-            }
-        }
-    }
+            else {
+                if (!this.insertItem(originalStack, playerInvStart, playerInvEnd, true)) {
+                    return ItemStack.EMPTY;
+                }
 
-    private boolean isFishBait(ItemStack itemStack) {
-        return itemStack.getItem() instanceof FishingBait;
+                if (originalStack.isEmpty()) {
+                    slot.setStack(ItemStack.EMPTY);
+                } else {
+                    slot.markDirty();
+                }
+            }
+            slot.onTakeItem(player, originalStack);
+        }
+        return newStack;
     }
 }
