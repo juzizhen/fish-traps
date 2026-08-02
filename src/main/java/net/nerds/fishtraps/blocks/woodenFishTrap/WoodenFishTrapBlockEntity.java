@@ -23,6 +23,11 @@ public class WoodenFishTrapBlockEntity extends BaseFishTrapBlockEntity implement
     }
 
     @Override
+    public String getTrapName() {
+        return "wooden_fish_trap";
+    }
+
+    @Override
     public BlockPos getScreenOpeningData(ServerPlayerEntity player) {
         return this.pos;
     }

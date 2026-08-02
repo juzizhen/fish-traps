@@ -23,6 +23,11 @@ public class IronFishTrapBlockEntity extends BaseFishTrapBlockEntity implements 
     }
 
     @Override
+    public String getTrapName() {
+        return "iron_fish_trap";
+    }
+
+    @Override
     public BlockPos getScreenOpeningData(ServerPlayerEntity player) {
         return this.pos;
     }

@@ -4,7 +4,8 @@
     "recipes": [
       "fishtraps:wooden_fish_trap",
       "fishtraps:iron_fish_trap",
-      "fishtraps:diamond_fish_trap"
+      "fishtraps:diamond_fish_trap",
+      "fishtraps:fish_trap_bait"
     ]
   },
   "criteria": {
@@ -13,7 +14,7 @@
       "conditions": {
         "items": [
           {
-            "item": "minecraft:fishing_rod"
+            "items": "minecraft:fishing_rod"
           }
         ]
       }

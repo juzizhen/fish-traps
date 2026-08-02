@@ -15,11 +15,13 @@ import net.minecraft.inventory.Inventories;
 import net.minecraft.inventory.SidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.loot.LootTable;
 import net.minecraft.loot.LootTables;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.loot.context.LootContextTypes;
 import net.minecraft.loot.context.LootWorldContext;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.NamedScreenHandlerFactory;
@@ -28,6 +30,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.storage.ReadView;
 import net.minecraft.storage.WriteView;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -139,9 +142,14 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
 
         LootWorldContext worldCtx = worldCtxBuilder.build(LootContextTypes.FISHING);
 
-        List<ItemStack> list = this.world.getServer()
-                .getReloadableRegistries().getLootTable(LootTables.FISHING_GAMEPLAY)
-                .generateLoot(worldCtx);
+        RegistryKey<LootTable> customKey = RegistryKey.of(RegistryKeys.LOOT_TABLE,
+                Identifier.of(Fishtraps.MODID, "traps/" + getTrapName()));
+        LootTable lootTable = this.world.getServer().getReloadableRegistries().getLootTable(customKey);
+        if (lootTable == LootTable.EMPTY) {
+            lootTable = this.world.getServer().getReloadableRegistries().getLootTable(LootTables.FISHING_GAMEPLAY);
+        }
+
+        List<ItemStack> list = lootTable.generateLoot(worldCtx);
 
         addItemsToInventory(list);
 
@@ -284,6 +292,8 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     public boolean canExtract(int slot, ItemStack stack, Direction dir) {
         return dir == Direction.DOWN && slot > 0;
     }
+
+    public abstract String getTrapName();
 
     @Override
     public abstract Text getDisplayName();

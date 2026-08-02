@@ -23,6 +23,11 @@ public class DiamondFishTrapBlockEntity extends BaseFishTrapBlockEntity implemen
     }
 
     @Override
+    public String getTrapName() {
+        return "diamond_fish_trap";
+    }
+
+    @Override
     public BlockPos getScreenOpeningData(ServerPlayerEntity player) {
         return this.pos;
     }
