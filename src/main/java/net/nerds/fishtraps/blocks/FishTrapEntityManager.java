@@ -12,15 +12,13 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.nerds.fishtraps.Fishtraps;
+import net.nerds.fishtraps.blocks.baseTrap.FishTrapBaitRenderer;
 import net.nerds.fishtraps.blocks.diamondFishTrap.DiamondFishTrapBlockEntity;
 import net.nerds.fishtraps.blocks.diamondFishTrap.DiamondFishTrapContainer;
-import net.nerds.fishtraps.blocks.diamondFishTrap.DiamondFishTrapRenderer;
 import net.nerds.fishtraps.blocks.ironFishTrap.IronFishTrapBlockEntity;
 import net.nerds.fishtraps.blocks.ironFishTrap.IronFishTrapContainer;
-import net.nerds.fishtraps.blocks.ironFishTrap.IronFishTrapRenderer;
 import net.nerds.fishtraps.blocks.woodenFishTrap.WoodenFishTrapBlockEntity;
 import net.nerds.fishtraps.blocks.woodenFishTrap.WoodenFishTrapContainer;
-import net.nerds.fishtraps.blocks.woodenFishTrap.WoodenFishTrapRenderer;
 
 public class FishTrapEntityManager {
 
@@ -112,8 +110,8 @@ public class FishTrapEntityManager {
 
     @Environment(EnvType.CLIENT)
     public static void registerEntityRenderers() {
-        BlockEntityRenderers.register(WOODEN_FISH_TRAP_ENTITY, WoodenFishTrapRenderer::new);
-        BlockEntityRenderers.register(IRON_FISH_TRAP_ENTITY, IronFishTrapRenderer::new);
-        BlockEntityRenderers.register(DIAMOND_FISH_TRAP_ENTITY, DiamondFishTrapRenderer::new);
+        BlockEntityRenderers.register(WOODEN_FISH_TRAP_ENTITY, FishTrapBaitRenderer::new);
+        BlockEntityRenderers.register(IRON_FISH_TRAP_ENTITY, FishTrapBaitRenderer::new);
+        BlockEntityRenderers.register(DIAMOND_FISH_TRAP_ENTITY, FishTrapBaitRenderer::new);
     }
 }

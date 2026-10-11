@@ -16,8 +16,6 @@ import net.nerds.fishtraps.blocks.ironFishTrap.IronFishTrapBlock;
 import net.nerds.fishtraps.blocks.woodenFishTrap.WoodenFishTrapBlock;
 import net.nerds.fishtraps.items.FishingBait;
 
-import java.util.function.Function;
-
 public class FishTrapsManager {
 
     public static WoodenFishTrapBlock WOODEN_FISH_TRAP;
@@ -30,13 +28,6 @@ public class FishTrapsManager {
         itemInit();
         FishTrapEntityManager.init();
         FishTrapEntityManager.initGui();
-    }
-
-    private static <T extends Item> T registerItem(String name, Function<Item.Properties, T> factory, Item.Properties properties) {
-        ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("fishtraps", name));
-        T item = factory.apply(properties.setId(itemKey));
-        Registry.register(BuiltInRegistries.ITEM, itemKey, item);
-        return item;
     }
 
     private static <B extends Block> B registerBlock(ResourceKey<Block> key, B block) {
@@ -69,10 +60,9 @@ public class FishTrapsManager {
     }
 
     private static void itemInit() {
-        FISH_BAIT = registerItem(
-                "fish_trap_bait",
-                FishingBait::new,
-                new Item.Properties()
-        );
+        ResourceKey<Item> baitKey = ResourceKey.create(Registries.ITEM,
+                Identifier.fromNamespaceAndPath(Fishtraps.MODID, "fish_trap_bait"));
+        FISH_BAIT = Registry.register(BuiltInRegistries.ITEM, baitKey,
+                new FishingBait(new Item.Properties().setId(baitKey)));
     }
 }

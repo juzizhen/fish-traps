@@ -11,7 +11,6 @@ classes/
 
 # idea
 
-idea/
 .idea/
 *.iml
 *.ipr
@@ -39,4 +38,6 @@ hs_err_*.log
 replay_*.log
 *.hprof
 *.jfr
-/.idea/
+
+# msic
+/version

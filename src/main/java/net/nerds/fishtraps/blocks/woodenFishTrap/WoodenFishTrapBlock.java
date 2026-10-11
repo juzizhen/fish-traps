@@ -1,6 +1,5 @@
 package net.nerds.fishtraps.blocks.woodenFishTrap;
 
-import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -11,15 +10,8 @@ import net.nerds.fishtraps.blocks.baseTrap.BaseFishTrapBlock;
 
 public class WoodenFishTrapBlock extends BaseFishTrapBlock {
 
-    public static final MapCodec<WoodenFishTrapBlock> CODEC = simpleCodec(WoodenFishTrapBlock::new);
-
     public WoodenFishTrapBlock(BlockBehaviour.Properties properties) {
         super(properties);
-    }
-
-    @Override
-    protected MapCodec<WoodenFishTrapBlock> codec() {
-        return CODEC;
     }
 
     @Override

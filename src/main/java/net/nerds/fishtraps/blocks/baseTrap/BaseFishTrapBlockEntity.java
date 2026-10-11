@@ -272,7 +272,7 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Wor
 
     @Override
     public boolean stillValid(Player player) {
-        if (this.level.getBlockEntity(this.worldPosition) != this) {
+        if (this.level == null || this.level.getBlockEntity(this.worldPosition) != this) {
             return false;
         }
         return player.distanceToSqr((double) this.worldPosition.getX() + 0.5D,

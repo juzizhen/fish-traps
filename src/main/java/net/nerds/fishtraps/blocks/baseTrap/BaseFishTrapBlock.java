@@ -1,6 +1,5 @@
 package net.nerds.fishtraps.blocks.baseTrap;
 
-import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -37,9 +36,6 @@ public abstract class BaseFishTrapBlock extends BaseEntityBlock implements Simpl
         super(settings);
         this.registerDefaultState(this.stateDefinition.any().setValue(WATERLOGGED, false));
     }
-
-    @Override
-    protected abstract MapCodec<? extends BaseFishTrapBlock> codec();
 
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
