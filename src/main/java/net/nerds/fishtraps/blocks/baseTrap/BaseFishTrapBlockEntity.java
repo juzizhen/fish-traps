@@ -26,6 +26,7 @@ import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.state.property.Properties;
 import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
@@ -58,6 +59,7 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
     private boolean showFishBait = false;
     public DefaultedList<ItemStack> inventory;
     private final boolean workingInLava;
+    private final boolean allowWaterloggedBlocks;
 
     public BaseFishTrapBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, int fishDelay, int lureLevel, int luckOfTheSeaLevel) {
         super(type, pos, state);
@@ -68,6 +70,7 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
         this.luckOfTheSeaLevel = luckOfTheSeaLevel;
         this.shouldPenalty = Fishtraps.fishTrapsConfig.getBooleanProperty(FishTrapValues.SHOULD_PENALTY_MULTIPLIER);
         this.workingInLava = Fishtraps.fishTrapsConfig.getBooleanProperty(FishTrapValues.WORKING_IN_LAVA);
+        this.allowWaterloggedBlocks = Fishtraps.fishTrapsConfig.getBooleanProperty(FishTrapValues.ALLOW_WATERLOGGED_BLOCKS);
     }
 
     public void tick() {
@@ -96,11 +99,15 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
                 new BlockPos(pos.getX() + 1, pos.getY(), pos.getZ() + 1));
 
         for (BlockPos blockPos : waterCheckIterator) {
-            Block block = world.getBlockState(blockPos).getBlock();
+            BlockState blockState = world.getBlockState(blockPos);
+            Block block = blockState.getBlock();
 
             boolean validLiquid = block == Blocks.WATER;
             if (workingInLava) {
                 validLiquid = validLiquid || block == Blocks.LAVA;
+            }
+            if (allowWaterloggedBlocks) {
+                validLiquid = validLiquid || isWaterlogged(blockState);
             }
 
             if (!(validLiquid || block instanceof BaseFishTrapBlock)) {
@@ -112,6 +119,10 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
         if (isSurroundedByLiquid) {
             fish();
         }
+    }
+
+    private static boolean isWaterlogged(BlockState blockState) {
+        return blockState.contains(Properties.WATERLOGGED) && blockState.get(Properties.WATERLOGGED);
     }
 
     private void fish() {

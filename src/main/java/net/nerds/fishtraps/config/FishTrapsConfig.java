@@ -10,8 +10,7 @@ import java.io.*;
 public class FishTrapsConfig {
 
     private static final Logger logger = LogManager.getLogger();
-    private final String fishTrapJsonLocation = FabricLoader.getInstance().getConfigDirectory().getPath() + "/fishTrap.json";
-    private final File configFile = new File(fishTrapJsonLocation);
+    private final File configFile = FabricLoader.getInstance().getConfigDir().resolve("fishTrap.json").toFile();
     private JsonObject config;
 
     public void loadConfig() {
@@ -29,7 +28,7 @@ public class FishTrapsConfig {
 
     public void buildFile() {
         JsonObject jsonObject = getDefaults();
-        try (FileWriter writer = new FileWriter(fishTrapJsonLocation)) {
+        try (FileWriter writer = new FileWriter(configFile)) {
             writer.write(jsonObject.toString());
         } catch (IOException e) {
             logger.fatal("Config IO Error", e);
@@ -53,6 +52,7 @@ public class FishTrapsConfig {
         fishTrapJson.add(FishTrapValues.SHOULD_PENALTY_MULTIPLIER, new JsonPrimitive(true));
         fishTrapJson.add(FishTrapValues.FISH_BAIT_DURABILITY, new JsonPrimitive(400));
         fishTrapJson.add(FishTrapValues.WORKING_IN_LAVA, new JsonPrimitive(false));
+        fishTrapJson.add(FishTrapValues.ALLOW_WATERLOGGED_BLOCKS, new JsonPrimitive(false));
         return fishTrapJson;
     }
 

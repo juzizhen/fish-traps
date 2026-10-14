@@ -14,4 +14,5 @@ public class FishTrapValues {
     public static final String SHOULD_PENALTY_MULTIPLIER = "shouldTrapHavePenalty";
     public static final String FISH_BAIT_DURABILITY = "fishBaitDurability";
     public static final String WORKING_IN_LAVA = "workingInLava";
+    public static final String ALLOW_WATERLOGGED_BLOCKS = "allowWaterloggedBlocks";
 }
