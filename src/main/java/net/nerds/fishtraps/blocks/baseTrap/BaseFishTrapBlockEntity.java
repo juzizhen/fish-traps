@@ -102,7 +102,8 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
             BlockState blockState = world.getBlockState(blockPos);
             Block block = blockState.getBlock();
 
-            boolean validLiquid = block == Blocks.WATER;
+            // 流动水与水源共用 Blocks.WATER，只有 isStill() 的才是水源
+            boolean validLiquid = block == Blocks.WATER && blockState.getFluidState().isStill();
             if (workingInLava) {
                 validLiquid = validLiquid || block == Blocks.LAVA;
             }
@@ -121,11 +122,13 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
         }
     }
 
+    // 原版 Waterloggable#tryFillWithFluid 只接受 Fluids.WATER，所以 waterlogged 恒为水源
     private static boolean isWaterlogged(BlockState blockState) {
         return blockState.contains(Properties.WATERLOGGED) && blockState.get(Properties.WATERLOGGED);
     }
 
     private void fish() {
+        if (this.world == null || this.world.getServer() == null) return;
         ItemStack itemStack = new ItemStack(Items.FISHING_ROD);
 
         Map<Enchantment, Integer> enchantments = Map.of(
@@ -253,6 +256,7 @@ public abstract class BaseFishTrapBlockEntity extends BlockEntity implements Sid
 
     @Override
     public boolean canPlayerUse(PlayerEntity player) {
+        if (this.world == null) return false;
         if (this.world.getBlockEntity(this.pos) != this) {
             return false;
         }
